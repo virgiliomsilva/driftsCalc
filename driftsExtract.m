@@ -1,21 +1,21 @@
-% function [ISD, notConverged, means ] = driftsExtract(buildingName, code, noFloors, height, IML)
-buildingName = 'regular';
-code = 'EC2' ; 
-noFloors = 5;
-height = 2.8;
-IML = [.05, .1, .3, .5, .75, 1, 1.25, 1.5, 1.75, 2];
+function [ISD, notConverged, means] = driftsExtract(buildingName, code, noFloors, height, IML)
+% buildingName = 'regular';
+% code = 'EC2' ; 
+% noFloors = 5;
+% height = 2.8;
+% IML = [.05, .1, .3, .5, .75, 1, 1.25, 1.5, 1.75, 2];
 %% IMPORT ALL DRIFTS | EACH FLOOR PER PAGE
 for i = 1 : noFloors
-    eval(['disp_x_' num2str(i) ' = importdata("input\disp_' buildingName '_' code '_x_' num2str(i) '.txt");']);
-    eval(['disp_x (:,:,i) = disp_x_' num2str(i) '.data ;']);
-    eval(['clear disp_x_' num2str(i)]);
-    eval(['disp_y_' num2str(i) ' = importdata("input\disp_' buildingName '_' code '_y_' num2str(i) '.txt");']);
-    eval(['disp_y (:,:,i) = disp_y_' num2str(i) '.data ;']);
-    eval(['clear disp_y_' num2str(i)]);
+    disp_x_in = importdata(['input\disp_' buildingName '_' code '_x_' num2str(i) '.txt']);
+    disp_x (:,:,i) = disp_x_in.data ;
+    clear disp_x_in
+    disp_y_in = importdata(['input\disp_' buildingName '_' code '_y_' num2str(i) '.txt']);
+    disp_y (:,:,i) = disp_y_in.data ;
+    clear disp_y_in
 end
 
 timeNrecs = size(disp_x ,2);
-clear buildingName code 
+%clear buildingName code 
 %% CALCULATE THE INTER-STORY DRIFT: ISD BEING [IML, RECORD, ISD]
 ISD = [];
 for i = 2 : 2 : timeNrecs
@@ -50,7 +50,7 @@ for i = 1 : noRecs
     seismoRecSize = size(nSeismicRec,1);
     recordLength = sum(~isnan(disp_x(:, 2*i,1)));
     if (seismoRecSize - 2) > recordLength
-        ISD(ISD(:,2) == i, :) = [];
+%         ISD(ISD(:,2) == i, :) = [];
     end
 end
 
@@ -58,13 +58,17 @@ notConverged = setxor([1:noRecs]', ISD(:,2));
 ISD = sortrows(ISD, [1 3]);
 clear disp_x noRecs nSeismicRec recordLength seismoRecSize
 %% PLOT
-means = IML'
+means = IML' ;
 for i = 1 : length(IML)
     means(i, 2) = mean(ISD(ISD(:,1) == IML(i),3));
 end
 
 hold on
 scatter(ISD(:,1), ISD(:,3), 'b');
-scatter(means(:,1), means(:,2), 'filled','o r')
+scatter(means(:,1), means(:,2), 'filled','o r');
 xticks (IML);
+title([upper(buildingName(1)) lower(buildingName(2:end)) ' ' code]);
+xlabel('IML');
+ylabel('ISD');
+print([upper(buildingName(1)) lower(buildingName(2:end)) ' ' code],'-dpng');
 hold off
