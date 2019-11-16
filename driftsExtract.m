@@ -1,6 +1,13 @@
 function [ISD, notConverged, means, PoE] = driftsExtract(dir, buildingName, code, noFloors, floorHeight, IML, ISDthreshold, print, stoGlo)
 %% IMPORT ALL DRIFTS | EACH FLOOR PER PAGE
-for i = [1 10]% 1 : noFloors
+switch stoGlo
+    case 'local'
+        storeis = [1 : noFloors];
+    case 'global'
+        storeis = [1 noFloors];
+end
+
+for i = storeis
     disp_x_in = importdata([dir '\disp_' buildingName '_' code '_x_' num2str(i) '.txt']);
     disp_x (:,:,i) = disp_x_in.data ;
     clear disp_x_in

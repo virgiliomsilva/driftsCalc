@@ -1,3 +1,6 @@
 *.ini
 disp_*.txt
 .gitattributes
+.mat
+.png
+.txt
