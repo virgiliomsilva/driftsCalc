@@ -1,6 +1,5 @@
 *.ini
-disp_*.txt
 .gitattributes
-.mat
-.png
-.txt
+*.mat
+*.png
+*.txt
