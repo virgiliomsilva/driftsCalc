@@ -18,8 +18,8 @@ end
 
 timeNrecs = size(disp_x ,2);
 %clear buildingName code
-%% CALCULATE THE INTER-STORY DRIFT: ISD BEING [IML, RECORD, ISD]
-ISD = [];
+%% CALCULATE THE INTER-STORY DRIFT: ISDall BEING [IML, RECORD, ISD]
+ISDall = [];
 for i = 2 : 2 : timeNrecs
     recordLength = sum(~isnan(disp_x(:,i,1)));
     interStoryDrift = [disp_x([1:recordLength], i-1), zeros(recordLength, noFloors)];
@@ -43,48 +43,65 @@ for i = 2 : 2 : timeNrecs
     end
     
     maxISDrift = max(max(interStoryDrift(:, [2: noFloors+1])));%maxISDrift = max(max(interStoryDrift(:, [2: noFloors+1]),[],1));
-    ISD(end+1,[2 3]) = [i/2 , maxISDrift / (floorHeight*noFloors)]; %until this point ISD is just space-displacement, avoiding a costly calculus
+    ISDall(end+1,[2 3]) = [i/2 , maxISDrift / (floorHeight*noFloors)]; %until this point ISD is just space-displacement, avoiding a costly calculus
 end
 
 noIML = length(IML); noRecs = timeNrecs / 2;
 recsPerIntensity = noRecs/ noIML;
 for i = 1 : noIML
     for j = 1 : recsPerIntensity
-        ISD(recsPerIntensity*(i-1)+j, 1) = IML(i);
+        ISDall(recsPerIntensity*(i-1)+j, 1) = IML(i);
     end
 end
 
 clear dif_x dif_y disp_y height interStoryDrift j k maxISDrift noFloors noIML ...
     recsPerIntensity timeNrecs
+
+
 %% THE ONES THAT DIDN'T CONVERGED aka also dead give it a value to make it exceed!
 notConverged = [];
 for i = 1 : noRecs
     nSeismicRec = importdata(sprintf('records_info\\rec_%d_dir1.txt',i));
     seismoRecSize = size(nSeismicRec,1);
     recordLength = sum(~isnan(disp_x(:, 2*i,1)));
-    if (seismoRecSize - 10) > recordLength %|| max(abs(disp_x(:,2*i,10))) >
+    if (seismoRecSize - 10) > recordLength %|| ISDall(ISDall(:,2) == i, 3) > 2 * ISDthreshold %
 %         ISD(ISD(:,2) == i, :) = [];
-        ISD(ISD(:,2) == i, 3) = 2 * ISDthreshold;
+        ISDall(ISDall(:,2) == i, 3) = 1.5 * ISDthreshold;
         notConverged = [notConverged, i];
     end
 end
 
 % notConverged = setxor([1:noRecs]', ISD(:,2));
 
-ISD = sortrows(ISD, [1 3]);
+ISDall = sortrows(ISDall, [1 3]);
 clear disp_x noRecs nSeismicRec recordLength seismoRecSize
-%% CALCULATE THE PROBABILITY OF EXCEDENCE
+%% CALCULATE THE PROBABILITY OF EXCEDENCE accounting for non converged ones
 for i = 1 : length(IML)
-    aux = ISD(ISD(:,1) == IML(i), [1 3]);
+    aux = ISDall(ISDall(:,1) == IML(i), [1 3]);
     exceed = sum(aux(:,2) > ISDthreshold);
     PoE(i,:) = [IML(i),  exceed/size(aux,1)];
 end
-%% PLOT
-means = IML' ;
-for i = 1 : length(IML)
-    means(i, 2) = mean(ISD(ISD(:,1) == IML(i),3));
+%% ELIMINATE THE NON CONVERGED IN ORDER TO CALCULATE THE MEANS 
+converged = setxor(notConverged, ISDall(:,2));
+ISD = [];%ones(length(converged),3);
+% row = 1;
+for i = converged'
+%     disp(ISDall(ISDall(:,2) == i, :))
+%     aux = ISDall(ISDall(:,2) == i, :);
+%     ISD(row,:) = aux;
+    ISD = [ISD; ISDall(ISDall(:,2) == i,:)];
+%     row = row + 1 ;
+%     ISD = [ISD; [2*i, i, 3*i]];
+%     disp(i)
 end
 
+%% MEANS
+means = unique(ISD(:,1)); % IML' ;
+for i =1 : length(means)
+    means(i, 2) = mean(ISD(ISD(:,1) == means(i), 3));
+end
+
+%% PLOT
 % hold on
 % scatter(ISD(:,1), ISD(:,3), 'b');
 % scatter(means(:,1), means(:,2), 'filled','o r');

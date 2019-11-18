@@ -1,5 +1,6 @@
 *.ini
-.gitattributes
 *.mat
 *.png
 *.txt
+*.asv
+records_info/
