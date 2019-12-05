@@ -4,17 +4,24 @@ switch stoGlo
     case 'local'
         storeis = [1 : noFloors];
     case 'global'
-        storeis = [1 noFloors];
+        storeis = noFloors;
 end
 
-for i = storeis
-    disp_x_in = importdata([dir '\disp_' buildingName '_' code '_x_' num2str(i) '.txt']);
-    disp_x (:,:,i) = disp_x_in.data ;
-    clear disp_x_in
-    disp_y_in = importdata([dir '\disp_' buildingName '_' code '_y_' num2str(i) '.txt']);
-    disp_y (:,:,i) = disp_y_in.data ;
-    clear disp_y_in
-end
+% for i = storeis
+%     disp_x_in = importdata([dir '\disp_' buildingName '_' code '_x_' num2str(i) '.txt']);
+%     disp_x (:,:,i) = disp_x_in.data ;
+%     clear disp_x_in
+%     disp_y_in = importdata([dir '\disp_' buildingName '_' code '_y_' num2str(i) '.txt']);
+%     disp_y (:,:,i) = disp_y_in.data ;
+%     clear disp_y_in
+% end
+
+% gravar 2019/12/05
+% save([buildingName '_' code '_XX'],'disp_x')
+% save([buildingName '_' code '_YY'],'disp_y')
+
+disp_x = importdata([buildingName '_' code '_XX' '.mat']);
+disp_y = importdata([buildingName '_' code '_YY' '.mat']);
 
 timeNrecs = size(disp_x ,2);
 %clear buildingName code
@@ -100,17 +107,3 @@ means = unique(ISD(:,1)); % IML' ;
 for i =1 : length(means)
     means(i, 2) = mean(ISD(ISD(:,1) == means(i), 3));
 end
-
-%% PLOT
-% hold on
-% scatter(ISD(:,1), ISD(:,3), 'b');
-% scatter(means(:,1), means(:,2), 'filled','o r');
-% xticks (IML);
-% title([upper(buildingName(1)) lower(buildingName(2:end)) ' ' code]);
-% xlabel('IML');
-% ylabel('ISD');
-% switch print
-%     case 'print'
-% %         print([upper(buildingName(1)), lower(buildingName(2:end)), ' ', code],'-dpng');
-% end
-% hold off

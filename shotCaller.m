@@ -12,7 +12,7 @@ hazard_curve = importdata('hazardCurveLis.mat');
 inc = max(IML)/length(IML);
 aux1 = [inc:inc:max(IML)];
 
-for i = 1:3
+for i = 1:6
     switch i
         case 1
             disp80 = 0.75;
