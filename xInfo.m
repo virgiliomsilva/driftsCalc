@@ -9,11 +9,16 @@ if size(existentes, 1) > 1
 end
 
 pontos = [];%horizontal
-row = 1;
-for i = unique(existentes)
+row = 0;
+for i = unique(IML)
+    row = row + 1;
     count = sum(existentes == i);
+    %     if count > 0
     for j = 1 : count
         pontos = [pontos, aux1(row)];
     end
-    row = row + 1;
+    %         row = row + 1;
+    %     else
+    %         row = row + 1;
+    %     end
 end
