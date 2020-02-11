@@ -12,7 +12,7 @@ tic
 inc = max(IML)/length(IML);
 aux1 = [inc:inc:max(IML)];
 
-for i = 1:6
+for i = 6
     switch i
         case 1
             disp80 = 0.75;
@@ -59,8 +59,12 @@ for i = 1:6
     [ISDmatrix, notConvergedRecords, IMLisd, PoE] = driftsExtract(dir, buildingName, code, noFloors, heightFloor, IML, ISDthreshold,'print','global');
     
     % discrete fragility curve TO continuous function
+    if (strcmp(buildingName,'tenerIT') && strcmp(code, 'DC3'))
+        PoE(3,:) = [];
+    end
     X = PoE(:,1);
     Y = PoE(:,2);
+    
     func = @(fit,xdata)logncdf(xdata,fit(1),fit(2));
     fit = lsqcurvefit(func,[0.8 0.4],X,Y);
     save(['figs\\' buildingName '_' code '_fit'],'fit');
@@ -70,16 +74,28 @@ for i = 1:6
     frag_curve(:,1) = linspace(min(X),max(X),100);
     frag_curve(:,2) = logncdf(linspace(min(X),max(X),100),fit(1),fit(2));
     [aal_aapc] = aal_aapc_calc(hazard_curve,frag_curve,rtP);
+%     display(aal_aapc)
     save(['figs\\' buildingName '_' code '_aapc'],'aal_aapc');
+    csvwrite(['figs\\' buildingName '_' code '_aapc.csv'],aal_aapc);
     save(['figs\\' buildingName '_' code '_frag_curve'],'frag_curve');
     
     % PLOT
     % plot 1
+    figure
+    
+        % title
+    str{1} = ['\bf ', code, ' \rm'];
+    annotation('textbox', [0 0.9 1 0.1], ...
+    'String', str, ...
+    'EdgeColor', 'none', ...
+    'HorizontalAlignment', 'center')
+    
+    
     subplot(1,2,1)
     
-    [xDots, ~] = xInfo(ISDmatrix(:,1), IML);
     hold on
-    scatter(xDots, ISDmatrix(:,3)*100, 'b');
+    [xDots, ~] = xInfo(ISDmatrix(:,1), IML);
+    scatter(xDots, ISDmatrix(:,3)*100, 'k');
     scatter(unique(xDots), IMLisd(:,2)*100, 'filled','o r');
     
     axis([0 2 0 5])
@@ -88,8 +104,11 @@ for i = 1:6
     xtl = get(gca,'XTickLabel');
     set(gca,'XTickLabel', xtl,'fontsize',8);%,'FontWeight','bold')
     
-    xlabel('PGA [m/s^2]','FontSize', 10, 'FontName', 'Arial','FontWeight','normal');
+    xlabel('SA [g]','FontSize', 10, 'FontName', 'Arial','FontWeight','normal');
     ylabel('Global Drift [%]','FontSize', 10, 'FontName', 'Arial','FontWeight','normal');
+    
+    line([0 2], [ISDthreshold*100 ISDthreshold*100],'Color','red','LineWidth',1)
+    
     hold off
     
     % plot 2
@@ -97,15 +116,16 @@ for i = 1:6
     
     hold on
     plot(frag_curve(:,1), frag_curve(:,2),'LineWidth', 1, 'Color', 'k');
+%     plot(PoE(:,1), PoE(:,2))
     
     axis([0 2 0 1])
-    xlabel('PGA [m/s^2]','FontSize', 10, 'FontName', 'Arial','FontWeight','normal');
-    ylabel('Average Annual Probability of Collapse','FontSize', 10, 'FontName', 'Arial','FontWeight','normal');
+    xlabel('SA [g]','FontSize', 10, 'FontName', 'Arial','FontWeight','normal');
+    ylabel('Probability of Exceedance','FontSize', 10, 'FontName', 'Arial','FontWeight','normal');
     hold off
     
     % save png
     set(gcf, 'PaperUnits', 'centimeters');
-    x_width=16 ;y_height=8;
+    x_width=15 ;y_height= x_width/2;
     set(gcf, 'PaperPosition', [0 0 x_width y_height]); %
     saveas(gcf,['figs\\' buildingName '_' code '.png'])
     
@@ -136,8 +156,8 @@ for i = 1:2
     a3 = plot(DC3(:,1), DC3(:,2),'LineWidth', 1, 'Color',[0.9290 0.6940 0.1250]);
     
     axis([0 2 0 1])
-    xlabel('PGA [m/s^2]','FontSize', 10, 'FontName', 'Arial','FontWeight','normal');
-    ylabel('Average Annual Probability of Collapse','FontSize', 10, 'FontName', 'Arial','FontWeight','normal');
+    xlabel('SA [g]','FontSize', 10, 'FontName', 'Arial','FontWeight','normal');
+    ylabel('Probability of Exceedance','FontSize', 10, 'FontName', 'Arial','FontWeight','normal');
     
     legend([a1 a2 a3], {'DC1','DC2','DC3'}, ...
     'Location','east', 'color','none', 'Box', 'off');%, 'NumColumns', 4);%,'orientation','horizontal');
@@ -145,7 +165,7 @@ for i = 1:2
     
     % save png
     set(gcf, 'PaperUnits', 'centimeters');
-    x_width=10 ;y_height=8;
+    x_width=10 ;y_height= x_width * .8;
     set(gcf, 'PaperPosition', [0 0 x_width y_height]); %
     saveas(gcf,['figs\\' outName '_fragCurve.png'])
     close(gcf)

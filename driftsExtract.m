@@ -17,8 +17,8 @@ for i = storeis
 end
 
 % gravar 2019/12/05
-% save([buildingName '_' code '_XX'],'disp_x')
-% save([buildingName '_' code '_YY'],'disp_y')
+save([buildingName '_' code '_XX'],'disp_x')
+save([buildingName '_' code '_YY'],'disp_y')
 
 % disp_x = importdata([buildingName '_' code '_XX' '.mat']);
 % disp_y = importdata([buildingName '_' code '_YY' '.mat']);
@@ -70,7 +70,8 @@ for i = 1 : noRecs
     nSeismicRec = importdata(sprintf('records_info\\rec_%d_dir1.txt',i));
     seismoRecSize = size(nSeismicRec,1);
     recordLength = sum(~isnan(disp_x(:, 2*i, noFloors)));
-    if (seismoRecSize - 10) > recordLength  || (strcmp(buildingName,'tenerPT') && strcmp(code, 'DC2') && i == 125)
+   if (seismoRecSize - 10) > recordLength || (strcmp(buildingName,'tenerPT') && strcmp(code, 'DC2') && i == 125)% && ISDall(ISDall(:,2) == i, 3) > .75 * ISDthreshold
+%    if seismoRecSize * .60 > recordLength && ISDall(ISDall(:,2) == i, 3) > .75 * ISDthreshold
         ISDall(ISDall(:,2) == i, 3) = 100; 
         notConverged = [notConverged, i];
     end
